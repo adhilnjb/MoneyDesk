@@ -47,14 +47,31 @@ if not SECRET_KEY:
         SECRET_KEY = "temporary-build-key-please-set-django-secret-key-in-vercel"
 
 # Host setup (Auto-detects Vercel deployment URLs)
-ALLOWED_HOSTS = [h.strip() for h in env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1","Vercel.app").split(",") if h.strip()]
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in env("DJANGO_CSRF_TRUSTED_ORIGINS").split(",") if o.strip()]
+ALLOWED_HOSTS = [
+    ".vercel.app",
+    "localhost",
+    "127.0.0.1",
+]
 
-for _name in ("VERCEL_URL", "VERCEL_BRANCH_URL", "VERCEL_PROJECT_PRODUCTION_URL"):
-    _host = env(_name)
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.vercel.app",
+]
+
+# Add Vercel system environment variables automatically
+for _var in ("VERCEL_URL", "VERCEL_BRANCH_URL", "VERCEL_PROJECT_PRODUCTION_URL"):
+    _host = env(_var)
     if _host:
         ALLOWED_HOSTS.append(_host)
         CSRF_TRUSTED_ORIGINS.append(f"https://{_host}")
+
+# Append any explicitly defined extra hosts from Vercel settings
+if env("DJANGO_ALLOWED_HOSTS"):
+    ALLOWED_HOSTS.extend([h.strip() for h in env("DJANGO_ALLOWED_HOSTS").split(",") if h.strip()])
+
+if env("DJANGO_CSRF_TRUSTED_ORIGINS"):
+    CSRF_TRUSTED_ORIGINS.extend([o.strip() for o in env("DJANGO_CSRF_TRUSTED_ORIGINS").split(",") if o.strip()])
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # ---- Applications & Middleware -------------------------------------------
