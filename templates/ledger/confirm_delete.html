@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="pagehead"><h1>{{ title }}</h1></div>
+<form method="post" class="card form">{% csrf_token %}
+  <p><b>{{ object }}</b></p><p class="muted">This cannot be undone.</p>
+  <button class="btn danger" type="submit">Delete</button> <a class="btn ghost" href="{% url back %}">Keep it</a>
+</form>
+{% endblock %}

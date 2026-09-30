@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Security{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Security</h1><div class="sub">Keep your money data private.</div></div></div>
+<div class="grid g2">
+  <section class="card"><h2>Two-factor login</h2>
+    {% if profile.totp_enabled %}
+      <p><span class="tag income">On</span> You need a code from your authenticator app to log in. {{ codes_left }} recovery code{{ codes_left|pluralize }} left.</p>
+      <form method="post" action="{% url 'accounts:regenerate_codes' %}" class="field">{% csrf_token %}
+        <label for="pw1">Password</label><input class="input" type="password" id="pw1" name="password" autocomplete="current-password" required>
+        <button class="btn ghost" style="margin-top:8px" type="submit">Make new recovery codes</button></form>
+      <form method="post" action="{% url 'accounts:disable_2fa' %}">{% csrf_token %}
+        <label for="pw2">Password</label><input class="input" type="password" id="pw2" name="password" autocomplete="current-password" required>
+        <button class="btn danger" style="margin-top:8px" type="submit">Turn off two-factor</button></form>
+    {% else %}
+      <p><span class="tag">Off</span> Add a second step so a stolen password is not enough.</p>
+      <a class="btn" href="{% url 'accounts:setup_2fa' %}">Turn on two-factor</a>
+    {% endif %}
+  </section>
+  <section class="card"><h2>Password</h2>
+    <p class="muted">Use at least 10 characters. Changing it keeps this session signed in.</p>
+    <a class="btn ghost" href="{% url 'accounts:password_change' %}">Change password</a></section>
+</div>
+{% endblock %}

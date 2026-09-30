@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+{% block auth %}
+<div class="card">
+  <h1 style="margin-bottom:4px">Create your account</h1>
+  <p class="muted" style="margin-top:0">Wallets and categories are set up for you.</p>
+  <form method="post" novalidate>{% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}<div class="field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      <input class="input" type="{{ field.field.widget.input_type }}" id="{{ field.id_for_label }}" name="{{ field.html_name }}" value="{% if field.widget_type != 'password' %}{{ field.value|default_if_none:'' }}{% endif %}" required>
+      {% if field.help_text and field.errors %}{% endif %}
+      {% for e in field.errors %}<div class="err">{{ e }}</div>{% endfor %}</div>{% endfor %}
+    <p class="small muted">Password: at least 10 characters, not common, not all digits.</p>
+    <button class="btn" type="submit" style="width:100%;justify-content:center">Create account</button>
+  </form>
+  <p class="small muted" style="margin-bottom:0"><a href="{% url 'accounts:login' %}">Back to log in</a></p>
+</div>
+{% endblock %}

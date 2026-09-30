@@ -1,0 +1,20 @@
+{% load money %}
+<div class="tablewrap"><table>
+  <thead><tr><th>Date</th><th>Wallet</th><th>Category</th><th>Note</th><th class="right">Amount</th>{% if actions %}<th></th>{% endif %}</tr></thead>
+  <tbody>
+  {% for t in rows %}
+    <tr>
+      <td class="muted">{{ t.date|date:"d M Y" }}</td>
+      <td><span class="dot" style="background:{{ t.wallet.color }}"></span>{{ t.wallet.name }}{% if t.to_wallet %} → {{ t.to_wallet.name }}{% endif %}</td>
+      <td>{% if t.kind == 'transfer' %}<span class="tag transfer">Transfer</span>{% else %}{{ t.category.name|default:"–" }}{% endif %}</td>
+      <td class="muted">{{ t.note|truncatechars:40 }}</td>
+      <td class="amt {{ t.kind }}">{% if t.kind == 'income' %}+{% elif t.kind == 'expense' %}−{% endif %}{{ t.amount|inr }}</td>
+      {% if actions %}<td><div class="actions">
+        <a class="btn ghost sm" href="{% if t.kind == 'transfer' %}{% url 'ledger:transfer_edit' t.pk %}{% else %}{% url 'ledger:transaction_edit' t.pk %}{% endif %}">Edit</a>
+        <a class="btn ghost sm" href="{% url 'ledger:transaction_delete' t.pk %}">Delete</a></div></td>{% endif %}
+    </tr>
+  {% empty %}
+    <tr><td colspan="6" class="empty">Nothing here yet. <a href="{% url 'ledger:transaction_new' %}">Add your first entry</a>.</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>

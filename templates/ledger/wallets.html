@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Wallets{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Wallets</h1><div class="sub">One account, separate pots: business, salary, offline cash and savings.</div></div>
+  <a class="btn" href="{% url 'ledger:wallet_new' %}">New wallet</a></div>
+<div class="grid g2">
+{% for s in summary %}
+  <div class="card wallet" style="--c:{{ s.wallet.color }}">
+    <div class="muted small">{{ s.wallet.get_kind_display }}{% if s.wallet.archived %} · archived{% endif %}</div>
+    <div style="font-weight:800">{{ s.wallet.name }}</div>
+    <div class="bal">{{ s.balance|inr }}</div>
+    <div class="small muted">In {{ s.income|inr }} · Out {{ s.expense|inr }} · Moved out {{ s.sent|inr }} · Moved in {{ s.received|inr }}</div>
+    <div class="actions" style="justify-content:flex-start;margin-top:12px">
+      <a class="btn ghost sm" href="{% url 'ledger:transactions' %}?wallet={{ s.wallet.id }}">Entries</a>
+      <a class="btn ghost sm" href="{% url 'ledger:wallet_edit' s.wallet.id %}">Edit</a>
+      <form method="post" action="{% url 'ledger:wallet_archive' s.wallet.id %}">{% csrf_token %}<button class="btn ghost sm" type="submit">{% if s.wallet.archived %}Restore{% else %}Archive{% endif %}</button></form>
+      <a class="btn ghost sm" href="{% url 'ledger:wallet_delete' s.wallet.id %}">Delete</a>
+    </div>
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

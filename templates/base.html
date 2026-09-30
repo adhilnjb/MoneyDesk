@@ -1,0 +1,69 @@
+{% load static %}<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}MoneyDesk{% endblock %} · MoneyDesk</title>
+  
+  <!-- Add Favicon for Chrome Tab -->
+  <link rel="icon" type="image/svg+xml" href="{% static 'images/money.svg' %}">
+  
+  <meta name="color-scheme" content="light dark">
+  <script>
+    (function(){var t;try{t=localStorage.getItem('theme')}catch(e){}
+    if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+    document.documentElement.dataset.theme=t;})();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+{% if user.is_authenticated %}
+<div class="shell">
+  <aside class="side">
+    <a class="brand" href="{% url 'ledger:dashboard' %}">Money<span>Desk</span></a>
+    <nav class="nav" aria-label="Main">{% include "_nav.html" %}</nav>
+    <div class="spacer"></div>
+    <a class="btn" href="{% url 'ledger:transaction_new' %}">Add entry</a>
+    <button class="linkbtn" type="button" data-theme-toggle>Switch theme</button>
+    <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="linkbtn" type="submit">Log out ({{ user.username }})</button></form>
+  </aside>
+  <div>
+    <div class="top">
+      <a class="brand" style="padding:0" href="{% url 'ledger:dashboard' %}">Money<span>Desk</span></a>
+      <details><summary>Menu</summary>
+        <div class="menu">
+          <a href="{% url 'ledger:budgets' %}">Budgets</a>
+          <a href="{% url 'ledger:categories' %}">Categories</a>
+          <a href="{% url 'accounts:security' %}">Security</a>
+          <button class="linkbtn" type="button" data-theme-toggle>Switch theme</button>
+          <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="linkbtn" type="submit">Log out</button></form>
+        </div>
+      </details>
+    </div>
+    <main id="content">
+      {% if messages %}<ul class="msgs" role="status">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+      {% block content %}{% endblock %}
+    </main>
+    <nav class="bottom" aria-label="Quick">
+      <a href="{% url 'ledger:dashboard' %}" {% if request.path == '/' %}aria-current="page"{% endif %}>Home</a>
+      <a href="{% url 'ledger:transactions' %}" {% if '/transactions/' in request.path and 'new' not in request.path %}aria-current="page"{% endif %}>Entries</a>
+      <a class="add" href="{% url 'ledger:transaction_new' %}">Add</a>
+      <a href="{% url 'ledger:wallets' %}" {% if '/wallets/' in request.path %}aria-current="page"{% endif %}>Wallets</a>
+      <a href="{% url 'ledger:reports' %}" {% if '/reports/' in request.path %}aria-current="page"{% endif %}>Reports</a>
+    </nav>
+  </div>
+</div>
+{% else %}
+<main id="content" class="authwrap"><div class="authcard">
+  {% if messages %}<ul class="msgs" role="status">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+  {% block auth %}{% endblock %}
+</div></main>
+{% endif %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="{% static 'js/app.js' %}"></script>
+</body>
+</html>

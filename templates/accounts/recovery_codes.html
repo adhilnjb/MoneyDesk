@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Recovery codes{% endblock %}
+{% block content %}
+<div class="pagehead"><h1>{% if first %}Two-factor is on{% else %}New recovery codes{% endif %}</h1></div>
+<section class="card form">
+  <p>Save these recovery codes somewhere safe. Each works once if you lose your phone. They will not be shown again.</p>
+  <div class="codes">{% for c in codes %}<code>{{ c }}</code>{% endfor %}</div>
+  <p style="margin-top:16px"><a class="btn" href="{% url 'accounts:security' %}">I have saved them</a></p>
+</section>
+{% endblock %}

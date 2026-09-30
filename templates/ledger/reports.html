@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Reports</h1><div class="sub">Financial year {{ fy_label }}</div></div>
+  <form method="get"><select class="input" name="fy" aria-label="Financial year" onchange="this.form.submit()">
+    {% for y in years %}<option value="{{ y }}" {% if y == fy %}selected{% endif %}>Apr {{ y }} – Mar {{ y|add:1 }}</option>{% endfor %}</select></form>
+</div>
+<div class="grid g3">
+  <div class="card stat"><div class="label">Income</div><div class="value income">{{ totals.income|inr }}</div></div>
+  <div class="card stat"><div class="label">Expenses</div><div class="value expense">{{ totals.expense|inr }}</div></div>
+  <div class="card stat"><div class="label">Saved</div><div class="value">{{ totals.net|inr }}{% if totals.rate is not None %} <span class="muted small">({{ totals.rate|pct }})</span>{% endif %}</div></div>
+</div>
+<section class="card" style="margin-top:16px"><h2>By month</h2>
+  <div class="chartbox"><canvas id="fyChart" role="img" aria-label="Income and expenses by month"></canvas></div>{{ chart|json_script:"fy-data" }}
+  <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Month</th><th class="right">Income</th><th class="right">Expenses</th><th class="right">Net</th></tr></thead><tbody>
+  {% for m in months %}<tr><td>{{ m.label }}</td><td class="amt income">{{ m.income|inr }}</td><td class="amt expense">{{ m.expense|inr }}</td><td class="amt">{{ m.net|inr }}</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+<div class="grid g2" style="margin-top:16px">
+  <section class="card"><h2>By wallet</h2><table><thead><tr><th>Wallet</th><th class="right">Income</th><th class="right">Expenses</th><th class="right">Net</th></tr></thead><tbody>
+    {% for w in wallets %}<tr><td>{{ w.name }}</td><td class="amt income">{{ w.income|inr }}</td><td class="amt expense">{{ w.expense|inr }}</td><td class="amt">{{ w.net|inr }}</td></tr>
+    {% empty %}<tr><td colspan="4" class="empty">No entries in this year.</td></tr>{% endfor %}</tbody></table></section>
+  <section class="card"><h2>Expenses by category</h2><table><tbody>
+    {% for c in by_cat %}<tr><td>{{ c.name }}</td><td class="amt expense">{{ c.t|inr }}</td></tr>
+    {% empty %}<tr><td class="empty">No expenses in this year.</td></tr>{% endfor %}</tbody></table></section>
+</div>
+{% endblock %}

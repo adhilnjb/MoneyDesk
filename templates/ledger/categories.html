@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Categories{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Categories</h1><div class="sub">Rename, add or remove. Entries keep their amounts if a category is deleted.</div></div>
+  <a class="btn" href="{% url 'ledger:category_new' %}">New category</a></div>
+<div class="grid g2">
+  {% regroup categories by kind as groups %}
+  {% for g in groups %}
+  <section class="card"><h2 class="{{ g.grouper }}">{{ g.grouper|capfirst }}</h2>
+    <table><tbody>
+    {% for c in g.list %}
+      <tr><td>{{ c.name }}</td><td><div class="actions">
+        <a class="btn ghost sm" href="{% url 'ledger:category_edit' c.pk %}">Edit</a>
+        <a class="btn ghost sm" href="{% url 'ledger:category_delete' c.pk %}">Delete</a></div></td></tr>
+    {% endfor %}
+    </tbody></table>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

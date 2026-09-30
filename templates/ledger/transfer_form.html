@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Move money{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{% if instance %}Edit transfer{% else %}Move money{% endif %}</h1>
+  <div class="sub">Transfers change wallet balances only. They never count as income or expense.</div></div></div>
+<form method="post" class="card form" novalidate>{% csrf_token %}
+  {{ form.non_field_errors }}
+  {% with field=form.wallet %}{% include "ledger/_field.html" %}{% endwith %}
+  {% with field=form.to_wallet %}{% include "ledger/_field.html" %}{% endwith %}
+  {% with field=form.amount %}{% include "ledger/_field.html" %}{% endwith %}
+  {% with field=form.date %}{% include "ledger/_field.html" %}{% endwith %}
+  {% with field=form.note %}{% include "ledger/_field.html" %}{% endwith %}
+  <button class="btn" type="submit">Save transfer</button> <a class="btn ghost" href="{% url 'ledger:transactions' %}">Cancel</a>
+</form>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Budgets{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Budgets</h1><div class="sub">A monthly limit per expense category. Progress shows on the dashboard.</div></div>
+  <a class="btn" href="{% url 'ledger:budget_new' %}">New budget</a></div>
+<div class="card">
+  <table><thead><tr><th>Category</th><th class="right">Monthly limit</th><th></th></tr></thead><tbody>
+  {% for b in budgets %}
+    <tr><td>{{ b.category.name }}</td><td class="amt">{{ b.amount|inr }}</td><td><div class="actions">
+      <a class="btn ghost sm" href="{% url 'ledger:budget_edit' b.pk %}">Edit</a>
+      <a class="btn ghost sm" href="{% url 'ledger:budget_delete' b.pk %}">Delete</a></div></td></tr>
+  {% empty %}<tr><td colspan="3" class="empty">No budgets yet. Set a limit for Petrol, Food or anything else you want to watch.</td></tr>{% endfor %}
+  </tbody></table>
+</div>
+{% endblock %}

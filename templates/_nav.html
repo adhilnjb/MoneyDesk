@@ -1,0 +1,7 @@
+<a href="{% url 'ledger:dashboard' %}" {% if request.path == '/' %}aria-current="page"{% endif %}>Dashboard</a>
+<a href="{% url 'ledger:transactions' %}" {% if '/transactions/' in request.path or '/transfers/' in request.path %}aria-current="page"{% endif %}>Entries</a>
+<a href="{% url 'ledger:wallets' %}" {% if '/wallets/' in request.path %}aria-current="page"{% endif %}>Wallets</a>
+<a href="{% url 'ledger:budgets' %}" {% if '/budgets/' in request.path %}aria-current="page"{% endif %}>Budgets</a>
+<a href="{% url 'ledger:reports' %}" {% if '/reports/' in request.path %}aria-current="page"{% endif %}>Reports</a>
+<a href="{% url 'ledger:categories' %}" {% if '/categories/' in request.path %}aria-current="page"{% endif %}>Categories</a>
+<a href="{% url 'accounts:security' %}" {% if '/accounts/' in request.path %}aria-current="page"{% endif %}>Security</a>

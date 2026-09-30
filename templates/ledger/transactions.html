@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Entries{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <div><h1>Entries</h1><div class="sub">{{ page.paginator.count }} found · <span class="income">{{ totals.income|inr }} in</span> · <span class="expense">{{ totals.expense|inr }} out</span></div></div>
+  <div class="quick">
+    <a class="btn" href="{% url 'ledger:transaction_new' %}">Add entry</a>
+    <a class="btn ghost" href="{% url 'ledger:transfer_new' %}">Move money</a>
+    <a class="btn ghost" href="{% url 'ledger:export' %}?{{ querystring }}">Export CSV</a>
+  </div>
+</div>
+<form method="get" class="card" style="margin-bottom:16px"><div class="filters">
+  <div class="field"><label for="f-q">Search</label><input id="f-q" class="input" name="q" value="{{ f.q }}" placeholder="Note or category"></div>
+  <div class="field"><label for="f-w">Wallet</label><select id="f-w" class="input" name="wallet"><option value="">All</option>
+    {% for w in wallets %}<option value="{{ w.id }}" {% if f.wallet == w.id|stringformat:"s" %}selected{% endif %}>{{ w.name }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="f-k">Type</label><select id="f-k" class="input" name="kind"><option value="">All</option>
+    <option value="income" {% if f.kind == 'income' %}selected{% endif %}>Income</option>
+    <option value="expense" {% if f.kind == 'expense' %}selected{% endif %}>Expense</option>
+    <option value="transfer" {% if f.kind == 'transfer' %}selected{% endif %}>Transfer</option></select></div>
+  <div class="field"><label for="f-c">Category</label><select id="f-c" class="input" name="category"><option value="">All</option>
+    {% for c in categories %}<option value="{{ c.id }}" {% if f.category == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }} ({{ c.kind }})</option>{% endfor %}</select></div>
+  <div class="field"><label for="f-m">Month</label><select id="f-m" class="input" name="month"><option value="">Any</option>
+    {% for v, l in months %}<option value="{{ v }}" {% if f.month == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div class="field"><button class="btn" type="submit">Filter</button> <a class="btn ghost" href="{% url 'ledger:transactions' %}">Clear</a></div>
+</div></form>
+<div class="card">{% include "ledger/_rows.html" with rows=page actions=True %}</div>
+{% if page.has_other_pages %}
+<div class="pager">
+  {% if page.has_previous %}<a class="btn ghost sm" href="?{{ querystring }}&page={{ page.previous_page_number }}">Newer</a>{% endif %}
+  <span class="muted small">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a class="btn ghost sm" href="?{{ querystring }}&page={{ page.next_page_number }}">Older</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

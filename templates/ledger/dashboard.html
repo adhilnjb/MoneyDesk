@@ -1,0 +1,80 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <div><h1>Dashboard</h1><div class="sub">{{ period_label }}</div></div>
+  <form method="get"><label class="small muted" for="m" style="display:none">Period</label>
+    <select id="m" class="input" name="month" onchange="this.form.submit()">
+      <option value="all" {% if month == 'all' %}selected{% endif %}>All time</option>
+      {% for value, label in months %}<option value="{{ value }}" {% if month == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </form>
+</div>
+
+<section class="card hero" aria-label="Total money">
+  <div class="muted" style="font-weight:700">Total across all wallets</div>
+  <div class="big">{{ total_balance|inr }}</div>
+  <div class="alloc" role="img" aria-label="Share of money in each wallet">
+    {% for s in summary %}{% if s.share > 0 %}<i style="width:{{ s.share|floatformat:2 }}%;background:{{ s.wallet.color }}" title="{{ s.wallet.name }}"></i>{% endif %}{% endfor %}
+  </div>
+  <div class="legend">{% for s in summary %}<span><span class="dot" style="background:{{ s.wallet.color }}"></span>{{ s.wallet.name }} <b>{{ s.balance|inr }}</b></span>{% endfor %}</div>
+</section>
+
+<div class="quick" style="margin:16px 0">
+  <a class="btn" href="{% url 'ledger:transaction_new' %}?kind=income">Add income</a>
+  <a class="btn ghost" href="{% url 'ledger:transaction_new' %}?kind=expense">Add expense</a>
+  <a class="btn ghost" href="{% url 'ledger:transfer_new' %}?preset=salary_withdrawal">Withdraw salary to in-hand</a>
+  <a class="btn ghost" href="{% url 'ledger:transfer_new' %}">Move money</a>
+</div>
+
+<div class="grid g4 keep2">
+  <div class="card stat"><div class="label">Income</div><div class="value income">{{ totals.income|inr }}</div></div>
+  <div class="card stat"><div class="label">Expenses</div><div class="value expense">{{ totals.expense|inr }}</div></div>
+  <div class="card stat"><div class="label">Net</div><div class="value {% if totals.net < 0 %}expense{% endif %}">{{ totals.net|inr }}</div></div>
+  <div class="card stat"><div class="label">Savings rate</div><div class="value">{% if totals.rate is None %}–{% else %}{{ totals.rate|pct }}{% endif %}</div></div>
+</div>
+
+<h2 style="margin:26px 0 12px">Wallets</h2>
+<div class="grid g2">
+  {% for s in summary %}
+  <a class="card wallet" style="--c:{{ s.wallet.color }};color:inherit;text-decoration:none" href="{% url 'ledger:transactions' %}?wallet={{ s.wallet.id }}">
+    <div class="muted small">{{ s.wallet.get_kind_display }}</div>
+    <div style="font-weight:800">{{ s.wallet.name }}</div>
+    <div class="bal">{{ s.balance|inr }}</div>
+    <div class="small muted">{{ period_label }}: <span class="income">+{{ s.p_income|inr }}</span> · <span class="expense">−{{ s.p_expense|inr }}</span></div>
+  </a>
+  {% endfor %}
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  <section class="card">
+    <h2>Where the money went</h2>
+    {% for c in cats %}
+      <div class="catrow"><span>{{ c.name }}</span><div class="bar"><i style="width:{{ c.width|floatformat:1 }}%"></i></div><span class="right">{{ c.t|inr }}</span></div>
+    {% empty %}<p class="muted">No expenses in this period.</p>{% endfor %}
+  </section>
+  <section class="card">
+    <h2>Last six months</h2>
+    <div class="chartbox"><canvas id="trendChart" aria-label="Income and expenses by month" role="img"></canvas></div>
+    {{ trend|json_script:"trend-data" }}
+  </section>
+</div>
+
+{% if budgets %}
+<section class="card" style="margin-top:16px">
+  <div class="pagehead" style="margin:0 0 6px"><h2>Budgets · {{ ref_label }}</h2><a class="small" href="{% url 'ledger:budgets' %}">Manage</a></div>
+  {% for b in budgets %}
+    <div class="catrow" style="grid-template-columns:110px 1fr 130px">
+      <span>{{ b.budget.category.name }}</span>
+      <div class="bar"><i class="{% if b.over %}over{% elif b.near %}near{% endif %}" style="width:{{ b.bar|floatformat:1 }}%"></i></div>
+      <span class="right small">{{ b.used|inr }} / {{ b.budget.amount|inr }}</span>
+    </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section class="card" style="margin-top:16px">
+  <div class="pagehead" style="margin:0 0 6px"><h2>Recent entries</h2><a class="small" href="{% url 'ledger:transactions' %}">See all</a></div>
+  {% include "ledger/_rows.html" with rows=recent %}
+</section>
+{% endblock %}

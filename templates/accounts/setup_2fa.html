@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Turn on two-factor{% endblock %}
+{% block content %}
+<div class="pagehead"><h1>Turn on two-factor</h1></div>
+<section class="card form">
+  <p>1. Scan this code with Google Authenticator, Authy or any TOTP app.</p>
+  <div class="qr">{{ qr|safe }}</div>
+  <p class="small muted">Cannot scan? Enter this key by hand: <code>{{ secret }}</code></p>
+  <p>2. Type the 6-digit code the app shows.</p>
+  {% if error %}<p class="err" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" novalidate>{% csrf_token %}
+    <div class="field"><label for="code">Code</label><input class="input" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" required></div>
+    <button class="btn" type="submit">Confirm and turn on</button> <a class="btn ghost" href="{% url 'accounts:security' %}">Cancel</a>
+  </form>
+</section>
+{% endblock %}
