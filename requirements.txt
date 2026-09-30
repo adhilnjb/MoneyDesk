@@ -4,3 +4,4 @@ qrcode>=7.4
 whitenoise>=6.6
 openpyxl>=3.1
 psycopg[binary]>=3.1
+psycopg2-binary>=2.9.9

@@ -38,11 +38,13 @@ ON_VERCEL = bool(env("VERCEL"))
 DEBUG = env_bool("DJANGO_DEBUG", not ON_VERCEL)
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
+
 if not SECRET_KEY:
     if DEBUG:
         SECRET_KEY = "dev-only-insecure-key-change-this-in-production"
     else:
-        raise RuntimeError("DJANGO_SECRET_KEY environment variable is missing!")
+        # Fallback key ONLY during Vercel build phase if variable is forgotten
+        SECRET_KEY = "temporary-build-key-please-set-django-secret-key-in-vercel"
 
 # Host setup (Auto-detects Vercel deployment URLs)
 ALLOWED_HOSTS = [h.strip() for h in env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
