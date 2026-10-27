@@ -27,13 +27,6 @@
   <a class="btn ghost" href="{% url 'ledger:transfer_new' %}">Move money</a>
 </div>
 
-<div class="grid g4 keep2">
-  <div class="card stat"><div class="label">Income</div><div class="value income">{{ totals.income|inr }}</div></div>
-  <div class="card stat"><div class="label">Expenses</div><div class="value expense">{{ totals.expense|inr }}</div></div>
-  <div class="card stat"><div class="label">Net</div><div class="value {% if totals.net < 0 %}expense{% endif %}">{{ totals.net|inr }}</div></div>
-  <div class="card stat"><div class="label">Savings rate</div><div class="value">{% if totals.rate is None %}–{% else %}{{ totals.rate|pct }}{% endif %}</div></div>
-</div>
-
 <h2 style="margin:26px 0 12px">Wallets</h2>
 <div class="grid g2">
   {% for s in summary %}
