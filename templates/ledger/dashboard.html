@@ -20,12 +20,6 @@
   <div class="legend">{% for s in summary %}<span><span class="dot" style="background:{{ s.wallet.color }};color:{{ s.wallet.color }}"></span>{{ s.wallet.name }}&nbsp;<b>{{ s.balance|inr }}</b></span>{% endfor %}</div>
 </section>
 
-<section class="stats" aria-label="{{ period_label }} summary">
-  <div class="card stat s-income"><span class="sicon"><svg class="ic"><use href="#i-down"/></svg></span><div class="label">Income</div><div class="value">{{ totals.income|inr }}</div></div>
-  <div class="card stat s-expense"><span class="sicon"><svg class="ic"><use href="#i-up"/></svg></span><div class="label">Expenses</div><div class="value">{{ totals.expense|inr }}</div></div>
-  <div class="card stat s-net"><span class="sicon"><svg class="ic"><use href="#i-chart"/></svg></span><div class="label">Saved{% if totals.rate is not None %} · {{ totals.rate|pct }}{% endif %}</div><div class="value {% if totals.net < 0 %}expense{% endif %}">{{ totals.net|inr }}</div></div>
-</section>
-
 <div class="quick actionsgrid">
   <a class="btn" href="{% url 'ledger:transaction_new' %}?kind=income"><svg class="ic"><use href="#i-down"/></svg>Add income</a>
   <a class="btn ghost" href="{% url 'ledger:transaction_new' %}?kind=expense"><svg class="ic"><use href="#i-up"/></svg>Add expense</a>
