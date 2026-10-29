@@ -1,0 +1,78 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Borrow{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <div><h1>Borrow</h1><div class="sub">Money you owe and money owed to you.</div></div>
+  <div class="quick">
+    <a class="btn" href="{% url 'ledger:borrow_new' %}?direction=borrowed"><svg class="ic"><use href="#i-down"/></svg>I borrowed</a>
+    <a class="btn ghost" href="{% url 'ledger:borrow_new' %}?direction=lent"><svg class="ic"><use href="#i-up"/></svg>I lent</a>
+  </div>
+</div>
+
+<section class="stats" aria-label="Borrow summary">
+  <div class="card stat s-expense"><span class="sicon"><svg class="ic"><use href="#i-up"/></svg></span><div class="label">You owe</div><div class="value">{{ totals.owe|inr }}</div></div>
+  <div class="card stat s-income"><span class="sicon"><svg class="ic"><use href="#i-down"/></svg></span><div class="label">Owed to you</div><div class="value">{{ totals.owed|inr }}</div></div>
+  <div class="card stat s-net"><span class="sicon"><svg class="ic"><use href="#i-swap"/></svg></span><div class="label">Net</div><div class="value {% if totals.net < 0 %}expense{% elif totals.net > 0 %}income{% endif %}">{{ totals.net|inr }}</div></div>
+</section>
+
+<div class="filterbar">
+  <div class="chips" role="group" aria-label="Status">
+    <a class="chip {% if status == 'open' %}on{% endif %}" href="?status=open&who={{ who }}">Open</a>
+    <a class="chip {% if status == 'cleared' %}on{% endif %}" href="?status=cleared&who={{ who }}">Cleared</a>
+    <a class="chip {% if status == 'all' %}on{% endif %}" href="?status=all&who={{ who }}">All</a>
+  </div>
+  <div class="chips" role="group" aria-label="Who">
+    <a class="chip {% if not who %}on{% endif %}" href="?status={{ status }}">Everyone</a>
+    <a class="chip {% if who == 'borrowed' %}on{% endif %}" href="?status={{ status }}&who=borrowed">I owe</a>
+    <a class="chip {% if who == 'lent' %}on{% endif %}" href="?status={{ status }}&who=lent">Owes me</a>
+  </div>
+</div>
+
+<div class="grid g2">
+{% for b in borrows %}
+  <article class="card loan {{ b.direction }}{% if b.is_cleared %} done{% endif %}">
+    <header class="loanhead">
+      <span class="avatar" aria-hidden="true">{{ b.person|slice:":1"|upper }}</span>
+      <div class="who">
+        <div class="name">{{ b.person }}</div>
+        <div class="small muted">{% if b.direction == 'borrowed' %}You owe{% else %}Owes you{% endif %} · since {{ b.date|date:"d M Y" }}</div>
+      </div>
+      {% if b.is_cleared %}<span class="pill ok">Cleared{% if b.cleared_on %} {{ b.cleared_on|date:"d M" }}{% endif %}</span>
+      {% elif b.overdue %}<span class="pill bad">Overdue · {{ b.due_date|date:"d M" }}</span>
+      {% elif b.due_date %}<span class="pill">Due {{ b.due_date|date:"d M" }}</span>{% endif %}
+    </header>
+
+    <div class="balrow">
+      <div><div class="label">Balance</div><div class="balance">{{ b.balance|inr }}</div></div>
+      <div class="split small muted"><div>Total <b>{{ b.amount|inr }}</b></div><div>Paid <b>{{ b.paid|inr }}</b></div></div>
+    </div>
+    <div class="bar" role="img" aria-label="{{ b.progress|floatformat:0 }}% paid"><i style="width:{{ b.progress|floatformat:1 }}%"></i></div>
+    {% if b.note %}<p class="small muted note">{{ b.note }}</p>{% endif %}
+
+    <div class="loanactions">
+      {% if not b.is_cleared %}
+      <form method="post" action="{% url 'ledger:borrow_clear' b.pk %}" data-confirm="Mark {{ b.balance|inr }} as cleared{% if b.wallet %} and add it to {{ b.wallet.name }}{% endif %}?">{% csrf_token %}
+        <button class="btn clear" type="submit"><svg class="ic"><use href="#i-check"/></svg>Cleared</button></form>
+      <a class="btn ghost" href="{% url 'ledger:borrow_pay' b.pk %}">{% if b.direction == 'borrowed' %}Pay part{% else %}Get part{% endif %}</a>
+      {% endif %}
+      <a class="btn ghost" href="{% url 'ledger:borrow_edit' b.pk %}">Edit</a>
+      <a class="btn ghost danger-text" href="{% url 'ledger:borrow_delete' b.pk %}">Delete</a>
+    </div>
+
+    {% if b.payments.all %}
+    <details class="history"><summary>History · {{ b.payments.all|length }} payment{{ b.payments.all|length|pluralize }}</summary>
+      <ul>{% for p in b.payments.all %}
+        <li><span>{{ p.date|date:"d M Y" }}{% if p.note %} · {{ p.note }}{% endif %}{% if p.entry_id %} · <span class="tag">in wallet</span>{% endif %}</span>
+          <b>{{ p.amount|inr }}</b><a class="small" href="{% url 'ledger:borrow_payment_delete' p.pk %}">Undo</a></li>
+      {% endfor %}</ul>
+    </details>
+    {% endif %}
+  </article>
+{% empty %}
+  <div class="card empty grid-span">
+    <p>{% if status == 'open' %}Nothing pending. 🎉{% else %}Nothing here yet.{% endif %}</p>
+    <a class="btn" href="{% url 'ledger:borrow_new' %}">Add a borrow</a>
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

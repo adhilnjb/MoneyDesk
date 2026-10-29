@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}{% if borrow.direction == 'borrowed' %}Repay{% else %}Collect{% endif %}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{% if borrow.direction == 'borrowed' %}Repay {{ borrow.person }}{% else %}Collect from {{ borrow.person }}{% endif %}</h1>
+  <div class="sub">Enter any amount up to the balance. Partial is fine.</div></div></div>
+
+<section class="card loan {{ borrow.direction }} paysummary">
+  <div class="balrow">
+    <div><div class="label">Balance now</div><div class="balance">{{ borrow.balance|inr }}</div></div>
+    <div class="split small muted"><div>Total <b>{{ borrow.amount|inr }}</b></div><div>Paid <b>{{ borrow.paid|inr }}</b></div></div>
+  </div>
+  <div class="bar"><i style="width:{{ borrow.progress|floatformat:1 }}%"></i></div>
+</section>
+
+<form method="post" class="card form" novalidate data-balance="{{ borrow.balance }}">{% csrf_token %}
+  {{ form.non_field_errors }}
+  {% with field=form.amount %}{% include "ledger/_amount.html" %}{% endwith %}
+  <div class="chips quickfill" aria-label="Quick amounts">
+    <button type="button" class="chip" data-fill="1">Full balance</button>
+    <button type="button" class="chip" data-fill="0.5">Half</button>
+  </div>
+  <div class="afterbox" aria-live="polite">Balance after this: <b data-after>{{ borrow.balance|inr }}</b></div>
+  {% with field=form.date %}{% include "ledger/_field.html" %}{% endwith %}
+  {% with field=form.wallet %}{% include "ledger/_field.html" %}{% endwith %}
+  {% with field=form.note %}{% include "ledger/_field.html" %}{% endwith %}
+  <div class="formactions"><button class="btn" type="submit">Save payment</button> <a class="btn ghost" href="{% url 'ledger:borrow_list' %}">Cancel</a></div>
+</form>
+{% endblock %}

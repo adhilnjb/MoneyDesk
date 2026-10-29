@@ -7,7 +7,7 @@
   {% regroup categories by kind as groups %}
   {% for g in groups %}
   <section class="card"><h2 class="{{ g.grouper }}">{{ g.grouper|capfirst }}</h2>
-    <table><tbody>
+    <table class="rowtable"><tbody>
     {% for c in g.list %}
       <tr><td>{{ c.name }}</td><td><div class="actions">
         <a class="btn ghost sm" href="{% url 'ledger:category_edit' c.pk %}">Edit</a>

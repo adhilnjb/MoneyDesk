@@ -1,5 +1,5 @@
 {% load static %}<!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -9,33 +9,50 @@
   <link rel="icon" type="image/svg+xml" href="{% static 'images/money.svg' %}">
   
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#060914">
   <script>
     (function(){var t;try{t=localStorage.getItem('theme')}catch(e){}
-    if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+    if(!t)t='dark';
     document.documentElement.dataset.theme=t;})();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/><path d="M3 7l3-3h11"/><circle cx="16.5" cy="13.5" r="1"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 7h13l-3-3M17 17H4l3 3"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></symbol>
+</svg>
 <a class="skip" href="#content">Skip to content</a>
 {% if user.is_authenticated %}
 <div class="shell">
   <aside class="side">
-    <a class="brand" href="{% url 'ledger:dashboard' %}">Money<span>Desk</span></a>
+    <a class="brand" href="{% url 'ledger:dashboard' %}"><span class="logo" aria-hidden="true">₹</span><span class="bname">Money<span>Desk</span></span></a>
     <nav class="nav" aria-label="Main">{% include "_nav.html" %}</nav>
     <div class="spacer"></div>
-    <a class="btn" href="{% url 'ledger:transaction_new' %}">Add entry</a>
+    <a class="btn" href="{% url 'ledger:transaction_new' %}"><svg class="ic"><use href="#i-plus"/></svg>Add entry</a>
     <button class="linkbtn" type="button" data-theme-toggle>Switch theme</button>
     <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="linkbtn" type="submit">Log out ({{ user.username }})</button></form>
   </aside>
   <div>
     <div class="top">
-      <a class="brand" style="padding:0" href="{% url 'ledger:dashboard' %}">Money<span>Desk</span></a>
+      <a class="brand" href="{% url 'ledger:dashboard' %}"><span class="logo" aria-hidden="true">₹</span><span class="bname">Money<span>Desk</span></span></a>
       <details><summary>Menu</summary>
         <div class="menu">
+          <a href="{% url 'ledger:reports' %}">Reports</a>
           <a href="{% url 'ledger:budgets' %}">Budgets</a>
           <a href="{% url 'ledger:categories' %}">Categories</a>
           <a href="{% url 'accounts:security' %}">Security</a>
@@ -49,11 +66,11 @@
       {% block content %}{% endblock %}
     </main>
     <nav class="bottom" aria-label="Quick">
-      <a href="{% url 'ledger:dashboard' %}" {% if request.path == '/' %}aria-current="page"{% endif %}>Home</a>
-      <a href="{% url 'ledger:transactions' %}" {% if '/transactions/' in request.path and 'new' not in request.path %}aria-current="page"{% endif %}>Entries</a>
-      <a class="add" href="{% url 'ledger:transaction_new' %}">Add</a>
-      <a href="{% url 'ledger:wallets' %}" {% if '/wallets/' in request.path %}aria-current="page"{% endif %}>Wallets</a>
-      <a href="{% url 'ledger:reports' %}" {% if '/reports/' in request.path %}aria-current="page"{% endif %}>Reports</a>
+      <a href="{% url 'ledger:dashboard' %}" {% if request.path == '/' %}aria-current="page"{% endif %}><svg class="ic"><use href="#i-home"/></svg>Home</a>
+      <a href="{% url 'ledger:transactions' %}" {% if '/transactions/' in request.path and 'new' not in request.path %}aria-current="page"{% endif %}><svg class="ic"><use href="#i-list"/></svg>Entries</a>
+      <a class="add" href="{% url 'ledger:transaction_new' %}" aria-label="Add entry"><svg class="ic"><use href="#i-plus"/></svg></a>
+      <a href="{% url 'ledger:borrow_list' %}" {% if '/borrow/' in request.path %}aria-current="page"{% endif %}><svg class="ic"><use href="#i-swap"/></svg>Borrow</a>
+      <a href="{% url 'ledger:wallets' %}" {% if '/wallets/' in request.path %}aria-current="page"{% endif %}><svg class="ic"><use href="#i-wallet"/></svg>Wallets</a>
     </nav>
   </div>
 </div>
@@ -63,7 +80,6 @@
   {% block auth %}{% endblock %}
 </div></main>
 {% endif %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="{% static 'js/app.js' %}"></script>
 </body>
 </html>

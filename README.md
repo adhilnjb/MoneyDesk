@@ -11,7 +11,7 @@ One account, many wallets. Built from your `Money_Tracker_Phone.xlsx`.
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env                                   # then set DJANGO_SECRET_KEY
-python manage.py migrate
+python manage.py migrate        # run this after every update (adds the Borrow tables)
 python manage.py createsuperuser                       # this is your login
 python manage.py import_xlsx Money_Tracker_Phone.xlsx --user YOUR_USERNAME
 python manage.py runserver
@@ -31,6 +31,13 @@ After your account exists, set `ALLOW_SIGNUP=False` in `.env` so nobody else can
 - **Reports.** Financial year (Apr–Mar, like your sheet): by month, by wallet, by category.
 - **Import.** `import_xlsx` reads the *Entries* and *Settings* sheets. Milky Way → wallet "Milky Way" (business), ME → "Offline Cash".
   Change with `--business-wallet "Name"` and `--personal-wallet "Name"`. Rows with amount 0 are skipped.
+- **Borrow.** Track money you borrowed from someone (you owe) or lent to someone (they owe you).
+  Pick a wallet and the amount is entered there automatically (borrowed = money in, lent = money out); choose
+  "Don't add to any wallet" to keep it out of your balances. Each card shows total, paid and the **balance**.
+  **Cleared** settles the whole balance in one tap; **Pay part / Get part** takes any smaller amount and the
+  balance updates. Repayments make the opposite wallet entry automatically, and **Undo** in History reverses one.
+  Borrow entries move wallet balances but never count as income or expense.
+- **Glassmorphic UI.** Frosted-glass panels over a neon gradient mesh, a floating glass bottom bar on phones, and a built-in SVG chart (no external chart script). Dark by default; light theme via *Switch theme*.
 - **Light and dark theme**, phone layout with a bottom bar.
 
 ## Security
@@ -130,7 +137,7 @@ Project → **Settings → Domains**. Then add the domain to `DJANGO_ALLOWED_HOS
 
 ## Tests
 
-`python manage.py test` — 16 tests cover balances, transfers, data isolation, lockout, 2FA, recovery codes and redirects.
+`python manage.py test` — 29 tests cover borrow/lend, balances, transfers, data isolation, lockout, 2FA, recovery codes and redirects.
 
 ## Ideas for later
 

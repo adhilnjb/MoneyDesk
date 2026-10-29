@@ -7,9 +7,9 @@
   {{ form.non_field_errors }}
   {% with field=form.wallet %}{% include "ledger/_field.html" %}{% endwith %}
   {% with field=form.to_wallet %}{% include "ledger/_field.html" %}{% endwith %}
-  {% with field=form.amount %}{% include "ledger/_field.html" %}{% endwith %}
+  {% with field=form.amount %}{% include "ledger/_amount.html" %}{% endwith %}
   {% with field=form.date %}{% include "ledger/_field.html" %}{% endwith %}
   {% with field=form.note %}{% include "ledger/_field.html" %}{% endwith %}
-  <button class="btn" type="submit">Save transfer</button> <a class="btn ghost" href="{% url 'ledger:transactions' %}">Cancel</a>
+  <div class="formactions"><button class="btn" type="submit">Save transfer</button> <a class="btn ghost" href="{% url 'ledger:transactions' %}">Cancel</a></div>
 </form>
 {% endblock %}

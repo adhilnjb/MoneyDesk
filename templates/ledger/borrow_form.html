@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{% if instance %}Edit borrow{% else %}New borrow{% endif %}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{% if instance %}Edit borrow{% else %}New borrow{% endif %}</h1>
+  <div class="sub">Pick a wallet and the amount is entered there for you.</div></div></div>
+<form method="post" class="card form" novalidate>{% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="field"><div class="seg" role="radiogroup" aria-label="Type">
+    {% for value, label in form.fields.direction.choices %}
+      <label><input type="radio" name="direction" value="{{ value }}" {% if form.direction.value == value %}checked{% endif %}{% if form.fields.direction.disabled %} disabled{% endif %}><span>{{ label }}</span></label>
+    {% endfor %}</div>
+    {% if form.fields.direction.disabled %}<div class="hint">Type is locked because repayments exist.</div>{% endif %}
+    {% for e in form.direction.errors %}<div class="err">{{ e }}</div>{% endfor %}</div>
+  {% with field=form.person %}{% include "ledger/_field.html" %}{% endwith %}
+  <datalist id="people">{% for p in people %}<option value="{{ p }}">{% endfor %}</datalist>
+  {% with field=form.amount %}{% include "ledger/_amount.html" %}{% endwith %}
+  <div class="row2">
+    {% with field=form.date %}{% include "ledger/_field.html" %}{% endwith %}
+    {% with field=form.due_date %}{% include "ledger/_field.html" %}{% endwith %}
+  </div>
+  {% with field=form.wallet hint="" %}{% include "ledger/_field.html" %}{% endwith %}
+  <div class="hint wallethint" data-dir-hint></div>
+  {% with field=form.note %}{% include "ledger/_field.html" %}{% endwith %}
+  <div class="formactions"><button class="btn" type="submit">Save</button> <a class="btn ghost" href="{% url 'ledger:borrow_list' %}">Cancel</a></div>
+</form>
+{% endblock %}

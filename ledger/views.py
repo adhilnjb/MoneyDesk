@@ -14,8 +14,9 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from . import services as svc
-from .forms import BudgetForm, CategoryForm, TransactionForm, TransferForm, WalletForm
-from .models import Budget, Category, Transaction, Wallet
+from .forms import (BorrowForm, BorrowPaymentForm, BudgetForm, CategoryForm, TransactionForm, TransferForm,
+                    WalletForm)
+from .models import Borrow, BorrowPayment, Budget, Category, Transaction, Wallet
 
 ZERO = Decimal("0")
 INC_EXP = [Transaction.INCOME, Transaction.EXPENSE]
@@ -103,6 +104,7 @@ def dashboard(request):
         "month": month, "months": _month_choices(), "period_label": ref.strftime("%B %Y") if start else "All time",
         "totals": totals, "summary": summary, "total_balance": total_balance, "cats": cats, "trend": trend,
         "budgets": budgets, "recent": recent, "salary": salary, "savings": savings, "ref_label": ref.strftime("%B %Y"),
+        "borrow": svc.borrow_totals(user),
     })
 
 
@@ -112,8 +114,10 @@ def _filtered(request):
     g = request.GET
     if g.get("wallet", "").isdigit():
         qs = qs.filter(Q(wallet_id=g["wallet"]) | Q(to_wallet_id=g["wallet"]))
-    if g.get("kind") in {"income", "expense", "transfer"}:
+    if g.get("kind") in {"income", "expense", "transfer", "loan_in", "loan_out"}:
         qs = qs.filter(kind=g["kind"])
+    elif g.get("kind") == "loan":
+        qs = qs.filter(kind__in=[Transaction.LOAN_IN, Transaction.LOAN_OUT])
     if g.get("category", "").isdigit():
         qs = qs.filter(category_id=g["category"])
     start, end = svc.parse_month(g.get("month"))
@@ -161,11 +165,19 @@ def export_csv(request):
     return response
 
 
+def _loan_entry_redirect(request, entry):
+    """Borrow entries are managed from the Borrow page so balances and repayments never drift apart."""
+    messages.info(request, "This entry was added automatically by a borrow. Change it from the Borrow page.")
+    return redirect("ledger:borrow_list")
+
+
 @login_required
 def transaction_form(request, pk=None):
     instance = get_object_or_404(Transaction, pk=pk, owner=request.user) if pk else None
     if instance and instance.kind == Transaction.TRANSFER:
         return redirect("ledger:transfer_edit", pk=pk)
+    if instance and instance.is_loan:
+        return _loan_entry_redirect(request, instance)
     initial = {}
     if not instance:
         if request.GET.get("kind") in {"income", "expense"}:
@@ -207,6 +219,8 @@ def transfer_form(request, pk=None):
 @login_required
 def transaction_delete(request, pk):
     obj = get_object_or_404(Transaction, pk=pk, owner=request.user)
+    if obj.is_loan:
+        return _loan_entry_redirect(request, obj)
     if request.method == "POST":
         obj.delete()
         messages.success(request, "Entry deleted.")
@@ -297,6 +311,117 @@ def budget_delete(request, pk):
         obj.delete()
         return redirect("ledger:budgets")
     return render(request, "ledger/confirm_delete.html", {"title": "Delete this budget?", "object": str(obj), "back": "ledger:budgets"})
+
+
+# ------------------------------------------------------------ borrow / lend
+def _borrow_or_404(request, pk):
+    return get_object_or_404(Borrow.objects.prefetch_related("payments__entry"), pk=pk, owner=request.user)
+
+
+@login_required
+def borrow_list(request):
+    status = request.GET.get("status", "open")
+    who = request.GET.get("who", "")
+    qs = Borrow.objects.filter(owner=request.user).prefetch_related("payments")
+    if status == "open":
+        qs = qs.filter(cleared_on__isnull=True)
+    elif status == "cleared":
+        qs = qs.filter(cleared_on__isnull=False)
+    else:
+        status = "all"
+    if who in {Borrow.BORROWED, Borrow.LENT}:
+        qs = qs.filter(direction=who)
+    else:
+        who = ""
+    rows = list(qs)
+    for b in rows:  # open items first, soonest due first
+        b.sort_key = (b.is_cleared, b.due_date or date.max)
+    rows.sort(key=lambda b: b.sort_key)
+    return render(request, "ledger/borrow_list.html", {
+        "borrows": rows, "totals": svc.borrow_totals(request.user), "status": status, "who": who,
+        "today": timezone.localdate(),
+    })
+
+
+@login_required
+def borrow_form(request, pk=None):
+    instance = _borrow_or_404(request, pk) if pk else None
+    initial = {}
+    if not instance:
+        initial["direction"] = request.GET.get("direction") if request.GET.get("direction") in {"borrowed", "lent"} else "borrowed"
+        first = Wallet.objects.filter(owner=request.user, archived=False).first()
+        initial["wallet"] = first.pk if first else None
+    form = BorrowForm(request.POST or None, instance=instance, user=request.user, initial=initial)
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.owner = request.user
+        obj.save()
+        svc.sync_borrow_entry(obj)
+        obj = svc.refresh_cleared(obj)
+        messages.success(request, "Borrow saved." + (" Entry added to your wallet." if obj.wallet_id else ""))
+        if obj.wallet_id:
+            _warn_if_negative(request, obj.wallet)
+        return redirect("ledger:borrow_list")
+    people = (Borrow.objects.filter(owner=request.user).order_by().values_list("person", flat=True).distinct())
+    return render(request, "ledger/borrow_form.html", {"form": form, "instance": instance, "people": sorted(set(people))})
+
+
+@login_required
+def borrow_pay(request, pk):
+    borrow = _borrow_or_404(request, pk)
+    if borrow.is_cleared:
+        messages.info(request, f"{borrow.person} is already cleared.")
+        return redirect("ledger:borrow_list")
+    form = BorrowPaymentForm(request.POST or None, borrow=borrow, user=request.user)
+    if request.method == "POST" and form.is_valid():
+        cd = form.cleaned_data
+        svc.record_payment(borrow, cd["amount"], cd["date"], cd["wallet"], cd["note"])
+        left = borrow.balance - cd["amount"]
+        messages.success(request, "Cleared in full." if left <= 0 else f"Saved. Balance left: ₹{left:,.2f}")
+        if cd["wallet"]:
+            _warn_if_negative(request, cd["wallet"])
+        return redirect("ledger:borrow_list")
+    return render(request, "ledger/borrow_pay.html", {"form": form, "borrow": borrow})
+
+
+@login_required
+@require_POST
+def borrow_clear(request, pk):
+    borrow = _borrow_or_404(request, pk)
+    payment = svc.clear_borrow(borrow)
+    if payment is None:
+        messages.info(request, "Nothing left to clear.")
+    else:
+        messages.success(request, f"{borrow.person} cleared." + (" Wallet entry added." if payment.entry_id else ""))
+        if payment.entry_id:
+            _warn_if_negative(request, payment.entry.wallet)
+    return redirect("ledger:borrow_list")
+
+
+@login_required
+def borrow_delete(request, pk):
+    obj = _borrow_or_404(request, pk)
+    if request.method == "POST":
+        obj.delete()  # signals remove the auto entries too
+        messages.success(request, "Borrow deleted along with its wallet entries.")
+        return redirect("ledger:borrow_list")
+    return render(request, "ledger/confirm_delete.html", {
+        "title": "Delete this borrow?", "object": f"{obj.person} · {obj.amount}",
+        "back": "ledger:borrow_list", "note": "Its wallet entries and repayments are removed too."})
+
+
+@login_required
+def borrow_payment_delete(request, pk):
+    pay = get_object_or_404(BorrowPayment.objects.select_related("borrow"), pk=pk, borrow__owner=request.user)
+    if request.method == "POST":
+        borrow = pay.borrow
+        pay.delete()
+        svc.refresh_cleared(borrow)
+        messages.success(request, "Repayment removed. The balance is back.")
+        return redirect("ledger:borrow_list")
+    return render(request, "ledger/confirm_delete.html", {
+        "title": "Undo this repayment?", "object": f"{pay.borrow.person} · {pay.amount} on {pay.date:%d %b %Y}",
+        "back": "ledger:borrow_list", "note": "Its wallet entry is removed and the balance goes back up."})
 
 
 # ------------------------------------------------------------------ reports

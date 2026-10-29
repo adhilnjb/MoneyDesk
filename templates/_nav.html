@@ -1,7 +1,8 @@
-<a href="{% url 'ledger:dashboard' %}" {% if request.path == '/' %}aria-current="page"{% endif %}>Dashboard</a>
-<a href="{% url 'ledger:transactions' %}" {% if '/transactions/' in request.path or '/transfers/' in request.path %}aria-current="page"{% endif %}>Entries</a>
-<a href="{% url 'ledger:wallets' %}" {% if '/wallets/' in request.path %}aria-current="page"{% endif %}>Wallets</a>
-<a href="{% url 'ledger:budgets' %}" {% if '/budgets/' in request.path %}aria-current="page"{% endif %}>Budgets</a>
-<a href="{% url 'ledger:reports' %}" {% if '/reports/' in request.path %}aria-current="page"{% endif %}>Reports</a>
-<a href="{% url 'ledger:categories' %}" {% if '/categories/' in request.path %}aria-current="page"{% endif %}>Categories</a>
-<a href="{% url 'accounts:security' %}" {% if '/accounts/' in request.path %}aria-current="page"{% endif %}>Security</a>
+<a href="{% url 'ledger:dashboard' %}" {% if request.path == '/' %}aria-current="page"{% endif %}><svg class="ic"><use href="#i-home"/></svg>Dashboard</a>
+<a href="{% url 'ledger:transactions' %}" {% if '/transactions/' in request.path or '/transfers/' in request.path %}aria-current="page"{% endif %}><svg class="ic"><use href="#i-list"/></svg>Entries</a>
+<a href="{% url 'ledger:borrow_list' %}" {% if '/borrow/' in request.path %}aria-current="page"{% endif %}><svg class="ic"><use href="#i-swap"/></svg>Borrow</a>
+<a href="{% url 'ledger:wallets' %}" {% if '/wallets/' in request.path %}aria-current="page"{% endif %}><svg class="ic"><use href="#i-wallet"/></svg>Wallets</a>
+<a href="{% url 'ledger:budgets' %}" {% if '/budgets/' in request.path %}aria-current="page"{% endif %}><svg class="ic"><use href="#i-target"/></svg>Budgets</a>
+<a href="{% url 'ledger:reports' %}" {% if '/reports/' in request.path %}aria-current="page"{% endif %}><svg class="ic"><use href="#i-chart"/></svg>Reports</a>
+<a href="{% url 'ledger:categories' %}" {% if '/categories/' in request.path %}aria-current="page"{% endif %}><svg class="ic"><use href="#i-tag"/></svg>Categories</a>
+<a href="{% url 'accounts:security' %}" {% if '/accounts/' in request.path %}aria-current="page"{% endif %}><svg class="ic"><use href="#i-shield"/></svg>Security</a>
